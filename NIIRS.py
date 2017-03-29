@@ -30,11 +30,36 @@ Y_obs= TruncatedNormal('Y_obs', mu=mu_dist, tau=sigma_dist, a=lower, b=upper) #,
 sim=MCMC([mu_dist, sigma_dist, Y_obs])
 sim.sample(50000, 10000, 1)
 
-y_samples = sim.trace("mu_dist")[:]
+y_samples = sim.trace("Y_dist")[:]
 fig = plt.figure(figsize=(5,5))
 axes = fig.add_subplot(111)
-axes.hist(y_samples, bins=50, normed=True, color="gray");
+axes.hist(y_samples, bins=50, normed=True, color="blue");
 fig.show()
+
+mu_samples = sim.trace("mu_dist")[:]
+fig = plt.figure(figsize=(5,5))
+axes = fig.add_subplot(111)
+axes.hist(mu_samples, bins=50, normed=True, color="green");
+fig.show()
+
+sig_samples = sim.trace("sigma_dist")[:]
+fig = plt.figure(figsize=(5,5))
+axes = fig.add_subplot(111)
+axes.hist(sig_samples, bins=50, normed=True, color="red");
+fig.show()
+
+#Confidence Intervals
+from scipy.special import erfinv
+
+def bayes_CR_mu(D, sigma, frac=0.95):
+    """Compute the credible region on the mean"""
+    #D is
+    Nsigma = np.sqrt(2) * erfinv(frac)
+    mu = D.mean()
+    sigma_mu = sigma * D.size ** -0.5
+    return mu - Nsigma * sigma_mu, mu + Nsigma * sigma_mu
+
+print("95% Credible Region: [{0:.0f}, {1:.0f}]".format(*bayes_CR_mu(y_samples, 10)))
 
 
 ###This attempts the same but with newer version of pymc3. 
