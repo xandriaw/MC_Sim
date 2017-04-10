@@ -27,7 +27,3 @@ class TruncatedMetropolis(pymc.Metropolis):
         if self.verbose > 1:
             print self._id + ': Hastings factor %f'%(lp_bak - lp_for)
         return lp_bak - lp_for
-    
-# call this like this: 
-    #M.use_step_method(TruncatedMetropolis, cutoff, D.value.max(), np.inf)
-    # M.step_method_dict[cutoff]
