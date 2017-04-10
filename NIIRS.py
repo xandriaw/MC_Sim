@@ -25,30 +25,33 @@ from pymc import TruncatedNormal, HalfNormal, Normal, Model, MCMC, Metropolis
 
 mu_dist = TruncatedNormal('mu_dist', mu=mu, tau=sigma, a=lower, b=upper)
 sigma_dist = HalfNormal('sigma_dist', tau=1) #use a half-normal since sd is always positive, had sd=1, maybe for pymc3
-Y_obs= TruncatedNormal('Y_obs', mu=mu_dist, tau=sigma_dist, a=lower, b=upper) #, observed=True) this was giving error- must have an initial value if observed=True
+Y_dist= TruncatedNormal('Y_dist', mu=mu_dist, tau=sigma_dist, a=lower, b=upper) #, observed=True) this was giving error- must have an initial value if observed=True
     
-sim=MCMC([mu_dist, sigma_dist, Y_obs])
-sim.sample(50000, 10000, 1)
+sim=MCMC([mu_dist, sigma_dist, Y_dist])
+sim.sample(iter=50000, burn=10000, thin=1)
 
 y_samples = sim.trace("Y_dist")[:]
-fig = plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(15,10))
 axes = fig.add_subplot(111)
 axes.hist(y_samples, bins=50, normed=True, color="blue");
 fig.show()
 
 mu_samples = sim.trace("mu_dist")[:]
-fig = plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(15,10))
 axes = fig.add_subplot(111)
 axes.hist(mu_samples, bins=50, normed=True, color="green");
 fig.show()
 
 sig_samples = sim.trace("sigma_dist")[:]
-fig = plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(15,10))
 axes = fig.add_subplot(111)
 axes.hist(sig_samples, bins=50, normed=True, color="red");
 fig.show()
 
 #Confidence Intervals
+#how many human verified samples ('known cases') do I need to ensure.
+#analysts averaged is unbiased.iid
+#want to lower the number of inspections by analysts. function -->
 from scipy.special import erfinv
 
 def bayes_CR_mu(D, sigma, frac=0.95):
