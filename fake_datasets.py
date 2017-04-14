@@ -31,7 +31,10 @@ variances = np.array([1, .75, .5, .25, .1])
 taus = 1/variances
 
 df=pd.DataFrame(columns = ["variance", "sampleSize","botMean", "humanMean", 
-                           "bias","matches", "95CR"])
+                           "bias","matches"])
+
+#what is the probability that an analyst would give this image the same rating?
+
 
 i=1
 for t in taus:
@@ -59,20 +62,19 @@ for t in taus:
 #        fig.show()
 
         df.loc[i]=[1/t, s, botOutput.mean(), humanOutput.mean(), b, 
-              sum(botOutput==humanOutput), 
-              bayes_CR_mu(humanOutput, np.sqrt(1/t), frac=0.95)]
+              sum(botOutput==humanOutput)]
         i=i+1
 print(df)
-
+df['probability'] = df.matches/df.sampleSize
 #"Given our observed data, there is a 95% probability that the true 
 # value of μμ falls within CRμCRμ" - Bayesians
 
 matplotlib.style.use('ggplot')
-plt.plot( df.sampleSize, df.Matches , legend=True )
+plt.plot( df.sampleSize, df.probability , legend=True )
 
 df.plot(x=sampleSize)
 
-ax = df.plot.scatter(x='sampleSize', y='matches', s=df['variance']*50)
+ax = df.plot.scatter(x='sampleSize', y='probability', s=df['variance']*50)
 
 
 
