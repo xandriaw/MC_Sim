@@ -14,14 +14,24 @@ import pandas as pd
 def round_to_half(number):
     """Round a number to the closest half integer."""
     return np.around(number * 2) / 2
-sampleSize= [5, 10, 15, 20,25,30]
+
+from scipy.special import erfinv
+
+def bayes_CR_mu(D, sigma, frac=0.95):
+    """Compute the credible region on the mean"""
+    Nsigma = np.sqrt(2) * erfinv(frac)
+    mu = D.mean()
+    sigma_mu = sigma * D.size ** -0.5
+    return mu - Nsigma * sigma_mu, mu + Nsigma * sigma_mu
+
+sampleSize= np.arange(1,100,1)
 variances = np.array([1, .75, .5, .25, .1])
 #note that tau is not sigm! 
 #sigma^2=1/\tau
 taus = 1/variances
 
 df=pd.DataFrame(columns = ["variance", "sampleSize","botMean", "humanMean", 
-                           "bias","Matches"])
+                           "bias","matches", "95CR"])
 
 i=1
 for t in taus:
@@ -47,15 +57,22 @@ for t in taus:
 #        axes.hist(botOutput, bins=20, normed=True, color="blue");
 #        axes.hist(humanOutput, bins=20, normed=True, color="red")
 #        fig.show()
-    
-        #find where they are the same..?
-        print()
-        print "variance:", 1/t, "sample size: " , s 
-        print( )
-        print "number of times human and bot are the same:", sum(botOutput ==humanOutput)
-#        df.append({"variance": 1/t, "sampleSize": s,"Matches:": sum(botOutput ==humanOutput)}, 
-#                   ignore_index=True)
-        df.loc[i]=[1/t, s, botOutput.mean(), humanOutput.mean(), b, sum(botOutput==humanOutput), ]
+
+        df.loc[i]=[1/t, s, botOutput.mean(), humanOutput.mean(), b, 
+              sum(botOutput==humanOutput), 
+              bayes_CR_mu(humanOutput, np.sqrt(1/t), frac=0.95)]
         i=i+1
 print(df)
+
+#"Given our observed data, there is a 95% probability that the true 
+# value of μμ falls within CRμCRμ" - Bayesians
+
+matplotlib.style.use('ggplot')
+plt.plot( df.sampleSize, df.Matches , legend=True )
+
+df.plot(x=sampleSize)
+
+ax = df.plot.scatter(x='sampleSize', y='matches', s=df['variance']*50)
+
+
 
