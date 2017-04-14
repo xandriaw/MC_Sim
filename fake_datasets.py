@@ -24,8 +24,7 @@ df=pd.DataFrame(columns = ["variance", "sampleSize", "Matches"])
 
 i=1
 for t in taus:
-
-    #make a tight distribution for both the bot and the human output
+    # the bot will always give the same output for a given image
     botOutput = TruncatedNormal('botOutput', mu=4.5, tau=t, a=1, b=10)
     humanOutput = TruncatedNormal('humanOutput', mu=4.5, tau=t, a=1, b=10)
     
@@ -33,15 +32,20 @@ for t in taus:
 
 
     for s in sampleSize:
+        #get s number of samples, no burn in for this- not optimizing anything
         sim.sample(s, 0, 1)
-        
-        botOutput = round_to_half(sim.trace("botOutput")[:])
+        #assume no bias at this point
+        b=0
+        #computer is always going to get the same value for an image
+        botOutput = np.full(s,4.5+b)
+        #vary the human output for this image
         humanOutput = round_to_half(sim.trace("humanOutput")[:])
-#        fig = plt.figure(figsize=(10,10))
-#        axes = fig.add_subplot(111)
-#        axes.hist(botOutput, bins=20, normed=True, color="blue");
-#        axes.hist(humanOutput, bins=20, normed=True, color="red")
-#        fig.show()
+        
+        fig = plt.figure(figsize=(10,10))
+        axes = fig.add_subplot(111)
+        axes.hist(botOutput, bins=20, normed=True, color="blue");
+        axes.hist(humanOutput, bins=20, normed=True, color="red")
+        fig.show()
     
         #find where they are the same..?
         print()
