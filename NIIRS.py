@@ -21,16 +21,17 @@ mu, sigma = 4.5, 1.5
 #[a,b] =(lower - mu) / sigma, (upper - mu) / sigma
 ###this may not be what we actually want to use as upper and lower
 
-from pymc import TruncatedNormal, HalfNormal, Normal, Model, MCMC, Metropolis
+from pymc import TruncatedNormal, HalfNormal, Normal, Model, MCMC, Metropolis, Uniform
 
 mu_dist = TruncatedNormal('mu_dist', mu=mu, tau=sigma, a=lower, b=upper)
-sigma_dist = HalfNormal('sigma_dist', tau=1) #use a half-normal since sd is always positive, had sd=1, maybe for pymc3
+sigma_dist = TruncatedNormal('sigma_dist', mu=0.2, a=0, b=10) #use a half-normal since sd is always positive, had sd=1, maybe for pymc3
 Y_obs= TruncatedNormal('Y_obs', mu=mu_dist, tau=sigma_dist, a=lower, b=upper) #, observed=True) this was giving error- must have an initial value if observed=True
     
+
 sim=MCMC([mu_dist, sigma_dist, Y_obs])
 sim.sample(50000, 10000, 1)
 
-y_samples = sim.trace("Y_dist")[:]
+y_samples = sim.trace("Y_obs")[:]
 fig = plt.figure(figsize=(5,5))
 axes = fig.add_subplot(111)
 axes.hist(y_samples, bins=50, normed=True, color="blue");
