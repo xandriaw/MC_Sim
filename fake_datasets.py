@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from pymc import TruncatedNormal, HalfNormal, Normal, Model, MCMC, Metropolis, Uniform
 import pandas as pd
+import math
 
 def round_to_half(number):
     """Round a number to the closest half integer."""
@@ -56,6 +57,8 @@ for t in taus:
 df['probability'] = df.matches/df.sampleSize
 df['difference']= df.botMean-df.humanMean
     
+differenceOfMeans=np.array(df['difference'])
+
 df.difference.plot(kind="hist",bins=40)
 
 ROPE= df[(df['difference'] < .01) & (df['difference'] > -0.01)]
@@ -70,19 +73,32 @@ print  "{:0.0f}".format(interval*100) + "% of our robot outputs are less than 0.
 
 #"Given our observed data, there is a 95% probability that the true 
 # value of μμ falls within CRμCRμ" - Bayesians
-fig, axes = plt.subplots(nrows=1, ncols=len(taus))
-fig.canvas.set_window_title('probability that an analyst would give this image the same NIIRS')
 
-for t in taus:
-    df=df.loc[(df.variance ==1/t)]
-    whichplace = int(np.argwhere(taus==t))
-    tdf.plot.scatter(x='sampleSize', y='probability', ax=axes[whichplace])
-    axes[whichplace].set_title('variance:' + str( 1/t))
+    
+###################### translated from R code for BEST HDI calculation
 
-df.difference.mean() + np.sqrt(df.difference.var())
-df.difference.mean() - np.sqrt(df.difference.var())
+    # Computes highest density interval from a sample of representative values,
+    #   estimated as shortest credible interval.
+    # Arguments:
+    #   sampleVec
+    #     is a vector of representative values from a probability distribution.
+    #   credMass
+    #     is a scalar between 0 and 1, indicating the mass within the credible
+    #     interval that is to be estimated.
+    # Value:
+    #   HDIlim is a vector containing the limits of the HDI
+credMass=0.95 #95% CDI
+sortedPts = sorted(differenceOfMeans)
+ciLength = int(math.floor( credMass * len( sortedPts) ))
+outsideCIlength = len(sortedPts)-ciLength
+ciWidth = np.zeros(outsideCIlength)
 
+for i in np.arange(outsideCIlength):
+    ciWidth[i]=sortedPts[i+ciLength]-sortedPts[i]
+    
+HDImin=sortedPts[ciWidth.argmin()]
+HDImax=sortedPts[ciWidth.argmin()+ciLength]
+HDIlim = [HDImin, HDImax]
 
-
-print("95% Credible Region: [{0:.0f}, {1:.0f}]".format(*bayes_CR_mu(D, 10)))
-
+differenceOfMeans=np.genfromtxt('C:\\Users\\xandr\\OneDrive\\Documents\\GitHub\\quality_data_science\\sampleVec.csv', delimiter=',')
+    
