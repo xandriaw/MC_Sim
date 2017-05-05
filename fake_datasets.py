@@ -54,9 +54,20 @@ for t in taus:
     #plot for each variance/tau
     
 df['probability'] = df.matches/df.sampleSize
-df['difference']= np.abs(df.botMean-df.humanMean)
+df['difference']= df.botMean-df.humanMean
     
-print(df)
+df.difference.plot(kind="hist",bins=40)
+
+ROPE= df[(df['difference'] < .01) & (df['difference'] > -0.01)]
+interval = np.round(ROPE.shape[0]*1.0/df.shape[0]*1.0, decimals=2)
+print  "{:0.0f}".format(interval*100) + "% of our robot outputs are less than 0.01 away from human output" 
+
+ROPE= df[(df['difference'] < .1) & (df['difference'] > -0.1)]
+interval = np.round(ROPE.shape[0]*1.0/df.shape[0]*1.0, decimals=2)
+print  "{:0.0f}".format(interval*100) + "% of our robot outputs are less than 0.1 away from human output" 
+
+
+
 #"Given our observed data, there is a 95% probability that the true 
 # value of μμ falls within CRμCRμ" - Bayesians
 fig, axes = plt.subplots(nrows=1, ncols=len(taus))
@@ -68,5 +79,10 @@ for t in taus:
     tdf.plot.scatter(x='sampleSize', y='probability', ax=axes[whichplace])
     axes[whichplace].set_title('variance:' + str( 1/t))
 
+df.difference.mean() + np.sqrt(df.difference.var())
+df.difference.mean() - np.sqrt(df.difference.var())
 
+
+
+print("95% Credible Region: [{0:.0f}, {1:.0f}]".format(*bayes_CR_mu(D, 10)))
 
