@@ -46,12 +46,14 @@ def HDIofMCMC(differenceOfMeans, credMass=0.95):
     
 
 #set our variables here
-#sampleSize= np.arange(5,500,2)
-sampleSize= np.array([5,10, 20, 50,100,150,200,250])
-variances = np.array([ 1, .75, .5, .3, .2, .1])
+sampleSize= np.arange(5,500,2)
+#sampleSize= np.array([5,10, 20, 50,100,150,200,250])
+#variances = np.array([ 1, .75, .5, .3, .2, .1])
+variances= np.array([1,.5,.1])
 ROPESize= 0.5 #make this positive
+#Region of practical equivalence. This is often [-0.1, 0.1] or something like this.
 strictly= True #should our rope be strictly less than or less than or equal to the limits
-credibleMass=0.95
+credibleMass=0.9
 #note that tau is not sigm! 
 #sigma^2=1/tau
 taus = 1/variances
@@ -71,7 +73,9 @@ for t in taus:
     humanOutput = TruncatedNormal('humanOutput', mu=4.5, tau=t, a=1, b=10)
     #mu = TruncatedNormal('mu', mu=4.5, tau = t, a=1, b=10)
     #humanOutput = TruncatedNormal('humanOutput', mu=mu, tau=t, a=1, b=10)
-    #maybe use this in the future. not sure
+    #maybe use this in the future. not sure    
+    #when we have data from the model we can use this here
+    #like this d = pymc.Binomial(‘d’, n=n, p=theta, value=np.array([0.,1.,3.,5.]), observed=True)
     
     sim=MCMC([placeHolder, humanOutput])
 
@@ -88,16 +92,18 @@ for t in taus:
 #        humanOutput = round_to_half(sim.trace("humanOutput")[:]) 
         humanOutput = sim.trace("humanOutput")[:]
         #difference of the means
-        difference = botOutput-humanOutput
+        difference = np.abs(botOutput-humanOutput)
         #HighestDensityInterval: where 95% of the differences are? are they close to 0?
         HDI= HDIofMCMC(differenceOfMeans= difference, credMass=credibleMass)
         #ROPE
         if strictly == True:
-            ROPE=difference[(difference<=ROPESize)&(difference>=(0-ROPESize))]
+            #ROPE=difference[(difference<=ROPESize)&(difference>=(0-ROPESize))]
+            ROPE=difference[(difference<=ROPESize)]
             probabilityInROPE = np.round(len(ROPE)*1.0/len(difference)*1.0, decimals=2)
             print  "{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are less than or equal to 0.5 away from human output" 
         else:
-            ROPE=difference[(difference<ROPESize)&(difference>(0-ROPESize))]
+           # ROPE=difference[(difference<ROPESize)&(difference>(0-ROPESize))]
+            ROPE=difference[(difference<ROPESize)] #how many differences are within the ROPE
             probabilityInROPE = np.round(len(ROPE)*1.0/len(difference)*1.0, decimals=2)
             print  "{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are strictly less than .5 away from human output" 
         
@@ -106,22 +112,31 @@ for t in taus:
               HDI[0], HDI[1], probabilityInROPE]
         i=i+1
 
-df['meanDifference']= df.botMean-df.humanMean
+df['meanDifference']= np.abs(df.botMean-df.humanMean)
 
 #"Given our observed data, there is a 95% probability that the true 
 # value of μμ falls within CRμCRμ" - Bayesians
 
 fig, axes = plt.subplots(nrows=1, ncols=len(taus))
-fig.canvas.set_window_title('probability that an analyst would give this image the same NIIRS')
-
+fig.canvas.set_window_title('%s highest density interval'%credibleMass)
 for t in taus:
     tdf=df.loc[(df.variance ==1/t)]
     whichplace = int(np.argwhere(taus==t))
-    tdf.plot.scatter(x='sampleSize', y='meanDifference', ax=axes[whichplace], s=2)
+    #not sure if it even makes sense to plot the mean difference-
+#    tdf.plot.scatter(x='sampleSize', y='meanDifference', ax=axes[whichplace], s=3, c = 'red')
     axes[whichplace].fill_between(x=tdf.sampleSize, y1=tdf.lowerHDI, y2=tdf.upperHDI)
     axes[whichplace].set_title('variance:' + str( 1/t))
-    axes[whichplace].set_ylim(df.lowerHDI.min(), df.upperHDI.max())
+    #axes[whichplace].set_ylim(df.lowerHDI.min(), df.upperHDI.max())
+    axes[whichplace].set_ylim(-.1, df.upperHDI.max())
     
-for 
-    plt.fill_between(tdf.sampleSize, tdf.lowerHDI, tdf.upperHDI)
+fig, axes = plt.subplots(nrows=1, ncols=len(taus))
+fig.canvas.set_window_title('proportion of images inside the ROPE (region of practical equivalence) - set to %s'%ROPESize)
+for t in taus:
+    tdf=df.loc[(df.variance ==1/t)]
+    whichplace = int(np.argwhere(taus==t))
+    tdf.plot.scatter(x='sampleSize', y='probabilityInROPE', ax=axes[whichplace], s=3)
+    axes[whichplace].set_title('variance:' + str( 1/t))
+    axes[whichplace].set_ylim(0, df.probabilityInROPE.max())
+
+
     
