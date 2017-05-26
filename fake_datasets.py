@@ -50,7 +50,7 @@ sampleSize= np.arange(5,500,2)
 #sampleSize= np.array([5,10, 20, 50,100,150,200,250])
 #variances = np.array([ 1, .75, .5, .3, .2, .1])
 variances= np.array([1,.5,.1])
-ROPESize= 0.5 #make this positive
+ROPESize= 0.2 # so we look at [-0.2, 0.2]
 #Region of practical equivalence. This is often [-0.1, 0.1] or something like this.
 strictly= True #should our rope be strictly less than or less than or equal to the limits
 credibleMass=0.9
@@ -97,13 +97,11 @@ for t in taus:
         HDI= HDIofMCMC(differenceOfMeans= difference, credMass=credibleMass)
         #ROPE
         if strictly == True:
-            #ROPE=difference[(difference<=ROPESize)&(difference>=(0-ROPESize))]
-            ROPE=difference[(difference<=ROPESize)]
+            ROPE=difference[(difference<=ROPESize)&(difference>=(0-ROPESize))]
             probabilityInROPE = np.round(len(ROPE)*1.0/len(difference)*1.0, decimals=2)
             print  "{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are less than or equal to 0.5 away from human output" 
         else:
-           # ROPE=difference[(difference<ROPESize)&(difference>(0-ROPESize))]
-            ROPE=difference[(difference<ROPESize)] #how many differences are within the ROPE
+            ROPE=difference[(difference<ROPESize)&(difference>(0-ROPESize))]
             probabilityInROPE = np.round(len(ROPE)*1.0/len(difference)*1.0, decimals=2)
             print  "{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are strictly less than .5 away from human output" 
         
@@ -127,6 +125,9 @@ for t in taus:
     axes[whichplace].fill_between(x=tdf.sampleSize, y1=tdf.lowerHDI, y2=tdf.upperHDI)
     axes[whichplace].set_title('variance:' + str( 1/t))
     axes[whichplace].set_ylim(df.lowerHDI.min(), df.upperHDI.max())
+    axes[whichplace].axhline(y=(0-ROPESize), xmin=0, xmax=df.sampleSize.max(), color='r')
+    axes[whichplace].axhline(y=ROPESize, xmin=0, xmax=df.sampleSize.max(), color='r')
+
     
 fig, axes = plt.subplots(nrows=1, ncols=len(taus))
 fig.canvas.set_window_title('proportion of images inside the ROPE (region of practical equivalence) - set to %s'%ROPESize)
