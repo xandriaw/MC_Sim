@@ -92,7 +92,7 @@ for t in taus:
 #        humanOutput = round_to_half(sim.trace("humanOutput")[:]) 
         humanOutput = sim.trace("humanOutput")[:]
         #difference of the means
-        difference = np.abs(botOutput-humanOutput)
+        difference = botOutput-humanOutput
         #HighestDensityInterval: where 95% of the differences are? are they close to 0?
         HDI= HDIofMCMC(differenceOfMeans= difference, credMass=credibleMass)
         #ROPE
@@ -112,7 +112,7 @@ for t in taus:
               HDI[0], HDI[1], probabilityInROPE]
         i=i+1
 
-df['meanDifference']= np.abs(df.botMean-df.humanMean)
+df['meanDifference']= df.botMean-df.humanMean
 
 #"Given our observed data, there is a 95% probability that the true 
 # value of μμ falls within CRμCRμ" - Bayesians
@@ -126,8 +126,7 @@ for t in taus:
 #    tdf.plot.scatter(x='sampleSize', y='meanDifference', ax=axes[whichplace], s=3, c = 'red')
     axes[whichplace].fill_between(x=tdf.sampleSize, y1=tdf.lowerHDI, y2=tdf.upperHDI)
     axes[whichplace].set_title('variance:' + str( 1/t))
-    #axes[whichplace].set_ylim(df.lowerHDI.min(), df.upperHDI.max())
-    axes[whichplace].set_ylim(-.1, df.upperHDI.max())
+    axes[whichplace].set_ylim(df.lowerHDI.min(), df.upperHDI.max())
     
 fig, axes = plt.subplots(nrows=1, ncols=len(taus))
 fig.canvas.set_window_title('proportion of images inside the ROPE (region of practical equivalence) - set to %s'%ROPESize)
@@ -136,7 +135,7 @@ for t in taus:
     whichplace = int(np.argwhere(taus==t))
     tdf.plot.scatter(x='sampleSize', y='probabilityInROPE', ax=axes[whichplace], s=3)
     axes[whichplace].set_title('variance:' + str( 1/t))
-    axes[whichplace].set_ylim(0, df.probabilityInROPE.max())
+    axes[whichplace].set_ylim(df.probabilityInROPE.min(), df.probabilityInROPE.max())
 
 
     
