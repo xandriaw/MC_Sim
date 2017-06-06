@@ -50,7 +50,7 @@ sampleSize= np.arange(5,500,2)
 #sampleSize= np.array([5,10, 20, 50,100,150,200,250])
 #variances = np.array([ 1, .75, .5, .3, .2, .1])
 variances= np.array([1,.5,.1])
-ROPESize= 0.2 # so we look at [-0.2, 0.2]
+ROPESize= 0.5 # so we look at [-0.2, 0.2]
 #Region of practical equivalence. This is often [-0.1, 0.1] or something like this.
 strictly= True #should our rope be strictly less than or less than or equal to the limits
 credibleMass=0.9
@@ -67,9 +67,8 @@ df=pd.DataFrame(columns = ["variance", "sampleSize","botMean", "humanMean",
 i=1
 
 for t in taus:
-    # the bot will always give the same output for a given image
-    #tau = 1/variance - this is varying for each iteration of the loop
-    placeHolder = TruncatedNormal('placeHolder', mu=4.5, tau=t, a=1, b=10)
+    # the bot now varies 
+    botOutput = TruncatedNormal('botOutput', mu=4.5, tau=t, a=1, b=10)
     humanOutput = TruncatedNormal('humanOutput', mu=4.5, tau=t, a=1, b=10)
     #mu = TruncatedNormal('mu', mu=4.5, tau = t, a=1, b=10)
     #humanOutput = TruncatedNormal('humanOutput', mu=mu, tau=t, a=1, b=10)
@@ -77,7 +76,7 @@ for t in taus:
     #when we have data from the model we can use this here
     #like this d = pymc.Binomial(‘d’, n=n, p=theta, value=np.array([0.,1.,3.,5.]), observed=True)
     
-    sim=MCMC([placeHolder, humanOutput])
+    sim=MCMC([botOutput, humanOutput])
 
 
     for s in sampleSize:
@@ -85,8 +84,8 @@ for t in taus:
         sim.sample(s, 0, 1)
         #assume no bias at this point but we can add bias later
         b=0
-        #computer is always going to get the same value for an image
-        botOutput = np.full(s,4.5+b)
+        #computer is now varying
+        botOutput = sim.trace("botOutput")[:]
         #vary the human output for this image
         #humans probably only give ratings at the 0.5 interval, not smaller
 #        humanOutput = round_to_half(sim.trace("humanOutput")[:]) 
