@@ -68,19 +68,18 @@ i=1
 
 for t in taus:
     # the bot now varies 
-    botOutput = TruncatedNormal('botOutput', mu=4.5, tau=t, a=1, b=10)
-    humanOutput = TruncatedNormal('humanOutput', mu=4.5, tau=t, a=1, b=10)
-    #mu = TruncatedNormal('mu', mu=4.5, tau = t, a=1, b=10)
-    #humanOutput = TruncatedNormal('humanOutput', mu=mu, tau=t, a=1, b=10)
-    #maybe use this in the future. not sure    
+    mu = TruncatedNormal('mu', mu=4.5, tau = t, a=1, b=10) #hypothetical ground truth
+    botOutput = TruncatedNormal('botOutput', mu=mu, tau=t, a=1, b=10)
+    humanOutput = TruncatedNormal('humanOutput', mu=mu, tau=t, a=1, b=10)
     #when we have data from the model we can use this here
     #like this d = pymc.Binomial(‘d’, n=n, p=theta, value=np.array([0.,1.,3.,5.]), observed=True)
     
-    sim=MCMC([botOutput, humanOutput])
+    sim=MCMC([mu, botOutput, humanOutput])
 
 
     for s in sampleSize:
         #get s number of samples, no burn in for this- not optimizing anything
+        print 'sample size: {}  | variance: {} '.format(s,t)
         sim.sample(s, 0, 1)
         #assume no bias at this point but we can add bias later
         b=0
@@ -91,18 +90,19 @@ for t in taus:
 #        humanOutput = round_to_half(sim.trace("humanOutput")[:]) 
         humanOutput = sim.trace("humanOutput")[:]
         #difference of the means
-        difference = botOutput-humanOutput
+        #but what we care about is the mean of the human output for each image.
+        difference = botOutput-humanOutput.mean()
         #HighestDensityInterval: where 95% of the differences are? are they close to 0?
         HDI= HDIofMCMC(differenceOfMeans= difference, credMass=credibleMass)
         #ROPE
         if strictly == True:
             ROPE=difference[(difference<=ROPESize)&(difference>=(0-ROPESize))]
             probabilityInROPE = np.round(len(ROPE)*1.0/len(difference)*1.0, decimals=2)
-            print  "{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are less than or equal to 0.5 away from human output" 
+            print  " \n{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are less than or equal to 0.5 away from human output" 
         else:
             ROPE=difference[(difference<ROPESize)&(difference>(0-ROPESize))]
             probabilityInROPE = np.round(len(ROPE)*1.0/len(difference)*1.0, decimals=2)
-            print  "{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are strictly less than .5 away from human output" 
+            print  " \n{:0.0f}".format(probabilityInROPE*100) + "% of our robot outputs are strictly less than .5 away from human output" 
         
         #fill the dataframe
         df.loc[i]=[1/t, s, botOutput.mean(), humanOutput.mean(),b, 
