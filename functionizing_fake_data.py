@@ -114,8 +114,9 @@ ax.axvline(x=(ROPESize), color='red' )
 #plot the HDI as well
 ax.hlines(y=.1,  linewidth=6, color = 'black' , xmin = HDI[0], xmax= HDI[1] )
 ax.set_xlim(round(min(difference))-1 )
-hdi_rounded=round(HDI,2)
-HDIText="HDI: %s" %round(HDI, 2))
+
+####Need to figure out how to round this and put it in annotation
+HDIText="HDI: %s" %np.around(HDI, decimals=1)
 ROPEText="ROPE: [-%s, %s]" %(ROPESize, ROPESize)
 ax.annotate(HDIText, (0.4, 0.05), textcoords='axes fraction', size=20, color='black')
 ax.annotate(ROPEText, (.5, .8), textcoords='axes fraction', size = 20, color = 'red')
