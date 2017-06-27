@@ -22,6 +22,13 @@ import numpy as np
 from bokeh.plotting import figure, show, output_file
 from bokeh.charts import Histogram
 from bokeh.models import Span
+
+
+sampleSize = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
+sampleSize = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
+
+
+
 p1 = figure(width=400, height=400, 
            title = "histogram of difference of means {0:.0f}% HDI" .format(credMass*100))
 hist,edges =np.histogram(difference)
@@ -34,6 +41,8 @@ ROPE2 = Span(location=ROPESize, dimension='height', line_color='red',
 p1.renderers.extend([ROPE1, ROPE2])
 p1.line(x=[HDI[0], HDI[1]], y=[3,3], line_color='black', line_width=4, legend ="HDI")
 show(p1)
+
+
 
 ####Need to figure out how to round this and put it in annotation
 HDIText="HDI: {}" .format(np.around(HDI, decimals=1))
