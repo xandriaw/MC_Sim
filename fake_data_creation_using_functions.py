@@ -24,11 +24,6 @@ from bokeh.charts import Histogram
 from bokeh.models import Span
 
 
-sampleSize = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
-sampleSize = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
-
-
-
 p1 = figure(width=400, height=400, 
            title = "histogram of difference of means {0:.0f}% HDI" .format(credMass*100))
 hist,edges =np.histogram(difference)
@@ -50,5 +45,3 @@ ROPEText="ROPE: [-{0}, {1}]" .format(ROPESize, ROPESize)
 ax.annotate(HDIText, (0.4, 0.05), textcoords='axes fraction', size=20, color='black')
 ax.annotate(ROPEText, (.5, .8), textcoords='axes fraction', size = 20, color = 'red')
     
-    
-    show(p)
