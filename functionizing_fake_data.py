@@ -83,9 +83,9 @@ def probInROPE(difference, ROPESize=0.5 ):
 #"Given our observed data, there is a 95% probability that the true 
 # value of μμ falls within CRμCRμ" - Bayesians
 
-def plotROPEHDI(difference, HDI, ROPESize=0.5, credMass=0.95):
+def plotROPEHDI(difference, HDI, ROPESize=0.5):
     fig, ax = plt.subplots()
-    fig.canvas.set_window_title("histogram of difference of means {0:.0f}% HDI" .format(credMass*100))
+    fig.canvas.set_window_title("histogram of difference of means {0:.0f}% HDI" .format(credibleMass*100))
     plt.hist(difference, rwidth=0.8,
                      facecolor='#7cb5ec', edgecolor='none')
     ax.set_title('Difference of bot mean and human mean')
