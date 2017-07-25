@@ -34,29 +34,20 @@ p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
 
 df= ColumnDataSource(data=dict(ROPE=[0-ROPESize, ROPESize], HDI=HDI))
 ROPE1 = Span(location=df.data['ROPE'][0], dimension='height', line_color='red', 
-             line_width=3)
+             line_width=3, render_mode="css")
 ROPE2 = Span(location=df.data['ROPE'][1], dimension='height', line_color='red', 
-             line_width=3)
+             line_width=3, render_mode="css")
 p1.renderers.extend([ROPE1, ROPE2])
 
 p1.line(x=[df.data['HDI'][0], df.data['HDI'][1]], y=[3,3], line_color='black', 
         line_width=4, legend ="HDI")
-
-callback = CustomJS(args=dict(df=df), code="""
-    var data = df.get('data');
-    var f = cb_obj.get('value')
-    data['ROPE'][0]=0-cb_obj.get('value')
-    data['ROPE'][1]=cb_obj.get('value')
-    
-    df.trigger('change');
-""")
 
 
 sampleSlider = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
 varianceSlider = Slider(title="Variance", value=0.2, start=0.05, end=2, step=0.05)
 humanMeanSlider= Slider(title="Human Mean NIIRS", value=4.5, start=1, end=10, step=0.1)
 ROPESlider= Slider(title= "ROPE Size (Region of Practical Equivalence)", 
-                   value = 0.5, start= 0.05, end = 1, step=0.05, callback=callback)
+                   value = 0.5, start= 0.05, end = 1, step=0.05)
 credibleRegionSlider= Slider(title = "Credible Mass", value = 0.95, start = 0.75, 
                              end = 0.995, step=0.05)
 #button = Button(label='press me') 
@@ -70,8 +61,8 @@ credibleRegionSlider.on_change('value', update_title)
 def update_df(attr, new, old):
     HDI= HDIofMCMC(differenceOfMeans= diffSource.data['difference'], credMass=credibleRegionSlider.value)
     df.data=dict(ROPE=[0-ROPESlider.value, ROPESlider.value], HDI=HDI)
-    ROPE1.set(location = df.data['ROPE'][0])
-    ROPE2.set(location = df.data['ROPE'][1])
+    ROPE1.location = 0-ROPESlider.value
+    ROPE2.location = ROPESlider.value
     
 for v in [credibleRegionSlider, ROPESlider]:
     v.on_change('value', update_df)
