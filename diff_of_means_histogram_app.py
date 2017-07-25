@@ -6,7 +6,7 @@ Created on Tue Jun 27 12:14:08 2017
 """
 import numpy as np
 from bokeh.plotting import figure, show, output_file
-from bokeh.models import Span, ColumnDataSource
+from bokeh.models import Span, ColumnDataSource, CustomJS
 from bokeh.models.widgets import Slider, Button
 from bokeh.io import curdoc
 from bokeh.layouts import row, widgetbox
@@ -42,11 +42,23 @@ p1.renderers.extend([ROPE1, ROPE2])
 p1.line(x=[df.data['HDI'][0], df.data['HDI'][1]], y=[3,3], line_color='black', 
         line_width=4, legend ="HDI")
 
+callback = CustomJS(args=dict(df=df), code="""
+    var data = df.get('data');
+    var f = cb_obj.get('value')
+    data['ROPE'][0]=0-cb_obj.get('value')
+    data['ROPE'][1]=cb_obj.get('value')
+    
+    df.trigger('change');
+""")
+
+
 sampleSlider = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
 varianceSlider = Slider(title="Variance", value=0.2, start=0.05, end=2, step=0.05)
 humanMeanSlider= Slider(title="Human Mean NIIRS", value=4.5, start=1, end=10, step=0.1)
-ROPESlider= Slider(title= "ROPE Size (Region of Practical Equivalence)", value = 0.5, start= 0.05, end = 1, step=0.05)
-credibleRegionSlider= Slider(title = "Credible Mass", value = 0.95, start = 0.75, end = 0.995, step=0.05)
+ROPESlider= Slider(title= "ROPE Size (Region of Practical Equivalence)", 
+                   value = 0.5, start= 0.05, end = 1, step=0.05, callback=callback)
+credibleRegionSlider= Slider(title = "Credible Mass", value = 0.95, start = 0.75, 
+                             end = 0.995, step=0.05)
 #button = Button(label='press me') 
 
 def update_title(attr,new, old):
@@ -58,6 +70,8 @@ credibleRegionSlider.on_change('value', update_title)
 def update_df(attr, new, old):
     HDI= HDIofMCMC(differenceOfMeans= diffSource.data['difference'], credMass=credibleRegionSlider.value)
     df.data=dict(ROPE=[0-ROPESlider.value, ROPESlider.value], HDI=HDI)
+    ROPE1.set(location = df.data['ROPE'][0])
+    ROPE2.set(location = df.data['ROPE'][1])
     
 for v in [credibleRegionSlider, ROPESlider]:
     v.on_change('value', update_df)
@@ -73,7 +87,6 @@ def update_data(attr, new,old):
 for w in [sampleSlider, varianceSlider]:
     w.on_change('value', update_data)
 
-    
 inputs = widgetbox( sampleSlider, varianceSlider, credibleRegionSlider, ROPESlider)
 show(row(p1,inputs))
 
