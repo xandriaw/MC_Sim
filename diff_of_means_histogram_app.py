@@ -28,14 +28,19 @@ probInROPE(diffSource.data['difference'], ROPESize=0.5 )
 HDI= HDIofMCMC(differenceOfMeans= diffSource.data['difference'], credMass=0.95)
 print("The HDI is {}" .format(HDI))
 hist,edges =np.histogram(diffSource.data['difference'])
+
 p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
         fill_color="#7cb5ec", line_color="#033649")
-ROPE1 = Span(location=0-ROPESize, dimension='height', line_color='red', 
+
+df= ColumnDataSource(data=dict(ROPE=[0-ROPESize, ROPESize], HDI=HDI))
+ROPE1 = Span(location=df.data['ROPE'][0], dimension='height', line_color='red', 
              line_width=3)
-ROPE2 = Span(location=ROPESize, dimension='height', line_color='red', 
+ROPE2 = Span(location=df.data['ROPE'][1], dimension='height', line_color='red', 
              line_width=3)
 p1.renderers.extend([ROPE1, ROPE2])
-p1.line(x=[HDI[0], HDI[1]], y=[3,3], line_color='black', line_width=4, legend ="HDI")
+
+p1.line(x=[df.data['HDI'][0], df.data['HDI'][1]], y=[3,3], line_color='black', 
+        line_width=4, legend ="HDI")
 
 sampleSlider = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
 varianceSlider = Slider(title="Variance", value=0.2, start=0.05, end=2, step=0.05)
@@ -47,48 +52,29 @@ credibleRegionSlider= Slider(title = "Credible Mass", value = 0.95, start = 0.75
 def update_title(attr,new, old):
     p1.title.text = "histogram of difference of means {0:.0f}% HDI" .format(credibleRegionSlider.value*100)
 
-def update_HDI(attr, new, old):
-    HDI= HDIofMCMC(differenceOfMeans= diffSource.data['difference'], credMass=credibleRegionSlider.value)
-    print("The HDI is {}" .format(HDI))
-    p1.line(x=[HDI[0], HDI[1]], y=[3,3], line_color='black', line_width=4, legend ="HDI")
-
-
-def update_ROPE(attr,new,old):
-    probInROPE(diffSource.data['difference'], ROPESize=ROPESlider.value )
-    ROPESize=ROPESlider.value
-    ROPE1 = Span(location=0-ROPESize, dimension='height', line_color='red', 
-             line_width=3)
-    ROPE2 = Span(location=ROPESize, dimension='height', line_color='red', 
-             line_width=3)
-    p1.renderers.extend([ROPE1, ROPE2])
-
 credibleRegionSlider.on_change('value', update_title)
-credibleRegionSlider.on_change('value', update_HDI)
-ROPESlider.on_change('value', update_ROPE)
 
+#update the ROPE and the credible region
+def update_df(attr, new, old):
+    HDI= HDIofMCMC(differenceOfMeans= diffSource.data['difference'], credMass=credibleRegionSlider.value)
+    df.data=dict(ROPE=[0-ROPESlider.value, ROPESlider.value], HDI=HDI)
+    
+for v in [credibleRegionSlider, ROPESlider]:
+    v.on_change('value', update_df)
+
+#update the difference of means array
 def update_data(attr, new,old):
-    difference= differenceOfmeans(humanMean=humanMeanSlider.value, variance=varianceSlider.value, sampleSize =sampleSlider.value)
+    difference= differenceOfmeans(humanMean=4.5, variance=varianceSlider.value, sampleSize =sampleSlider.value)
     diffSource.data=dict(difference=difference)
     hist,edges =np.histogram(diffSource.data['difference'])
     p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
-        fill_color="#7cb5ec", line_color="#033649")
-#    ROPE1 = Span(location=0-ROPESlider.value, dimension='height', line_color='red', 
-#             line_width=3)
-#    ROPE2 = Span(location=ROPESlider.value, dimension='height', line_color='red', 
-#                 line_width=3)
-#    p1.renderers.extend([ROPE1, ROPE2])
-#    p1.line(x=[HDI[0], HDI[1]], y=[3,3], line_color='black', line_width=4, legend ="{0:.0f}% HDI".format(credibleRegionSlider.value*100))
+        fill_color="#7cb5ec", line_color="#033649")    
 
-
-
-#def update_plot(attr, new, old):
-    
-
-for w in [sampleSlider, varianceSlider, humanMeanSlider]:
+for w in [sampleSlider, varianceSlider]:
     w.on_change('value', update_data)
-#button.on_click(update_plot)
+
     
-inputs = widgetbox( sampleSlider, varianceSlider, humanMeanSlider, credibleRegionSlider, ROPESlider)
+inputs = widgetbox( sampleSlider, varianceSlider, credibleRegionSlider, ROPESlider)
 show(row(p1,inputs))
 
 
