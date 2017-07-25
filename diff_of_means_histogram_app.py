@@ -6,8 +6,8 @@ Created on Tue Jun 27 12:14:08 2017
 """
 import numpy as np
 from bokeh.plotting import figure, show, output_file
-from bokeh.models import Span, ColumnDataSource, CustomJS
-from bokeh.models.widgets import Slider, Button
+from bokeh.models import Span, ColumnDataSource
+from bokeh.models.widgets import Slider
 from bokeh.io import curdoc
 from bokeh.layouts import row, widgetbox
 
@@ -29,7 +29,7 @@ HDI= HDIofMCMC(differenceOfMeans= diffSource.data['difference'], credMass=0.95)
 print("The HDI is {}" .format(HDI))
 hist,edges =np.histogram(diffSource.data['difference'])
 
-p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
+histo= p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
         fill_color="#7cb5ec", line_color="#033649")
 
 df= ColumnDataSource(data=dict(ROPE=[0-ROPESize, ROPESize], HDI=HDI))
@@ -38,9 +38,9 @@ ROPE1 = Span(location=df.data['ROPE'][0], dimension='height', line_color='red',
 ROPE2 = Span(location=df.data['ROPE'][1], dimension='height', line_color='red', 
              line_width=3, render_mode="css")
 p1.renderers.extend([ROPE1, ROPE2])
-
-p1.line(x=[df.data['HDI'][0], df.data['HDI'][1]], y=[3,3], line_color='black', 
+HDIline= p1.line(x=[df.data['HDI'][0], df.data['HDI'][1]], y=[3,3], line_color='black', 
         line_width=4, legend ="HDI")
+
 
 
 sampleSlider = Slider(title="Sample Size", value=50, start=10, end=10000, step=10)
@@ -72,7 +72,7 @@ def update_data(attr, new,old):
     difference= differenceOfmeans(humanMean=4.5, variance=varianceSlider.value, sampleSize =sampleSlider.value)
     diffSource.data=dict(difference=difference)
     hist,edges =np.histogram(diffSource.data['difference'])
-    p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
+    histo=p1.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
         fill_color="#7cb5ec", line_color="#033649")    
 
 for w in [sampleSlider, varianceSlider]:
