@@ -13,7 +13,7 @@ from bokeh.layouts import row, widgetbox
 
 #ROPE is the Region of practical equivalence. 
 #This is often [-0.1, 0.1] or something like this.
-execfile('C:\\Users\\xandr\\OneDrive\\Documents\\GitHub\\MC_Sim\\functionizing_fake_data.py')
+execfile('C:\\Users\\xandr\\GitHub\\MC_Sim\\functionizing_fake_data.py')
 
 credMass=0.95
 ROPESize=0.5 
@@ -69,6 +69,10 @@ for v in [credibleRegionSlider, ROPESlider]:
 
 #update the difference of means array
 def update_data(attr, new,old):
+    #remove existing gplyphs:
+    glyphRenderers = [x for x in p1.renderers if x.__view_model__ == "GlyphRenderer"]
+    for r in glyphRenderers:
+        p1.renderers.remove(r)
     difference= differenceOfmeans(humanMean=4.5, variance=varianceSlider.value, sampleSize =sampleSlider.value)
     diffSource.data=dict(difference=difference)
     hist,edges =np.histogram(diffSource.data['difference'])
